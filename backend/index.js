@@ -103,9 +103,20 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('endTurn', (room) => {
+    socket.on('discardDrawnCard', (room, drawnCard) => {
         let game = games[room];
         if (game && game.currentPlayer === socket.id) {
+            game.discardPile.push(drawnCard);  // Défausser la carte tirée
+            io.to(room).emit('gameUpdate', game);
+            // Ne pas passer le tour ici, attendre que le joueur retourne une carte
+        }
+    });
+
+    socket.on('revealCardAfterDiscard', (room, index) => {
+        let game = games[room];
+        if (game && game.currentPlayer === socket.id) {
+            let player = game.players[socket.id];
+            player.hand[index].visible = true;
             game.currentPlayer = getNextPlayer(room, socket.id);
             io.to(room).emit('gameUpdate', game);
             io.to(room).emit('updateTurn', game.currentPlayer);

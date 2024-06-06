@@ -19,17 +19,21 @@
         <div id="player-cards"></div>
         <hr>
         <h3>Opponent's cards</h3>
-        <div id="opponent-cards"></div> <!-- Conteneur pour les cartes de l'adversaire -->
-        <div id="draw-pile">
-            <h3>Draw Pile</h3>
-            <button onclick="drawCard()"><img src="assets/back.png" alt="Back of the card" draggable="false"></button>
+        <div id="opponent-cards"></div>
+        <div class="flex gap-4">
+            <div id="draw-pile">
+                <h3>Draw Pile</h3>
+                <div onclick="drawCard()"><img src="assets/back.png" alt="Back of the card" draggable="false"></div>
+            </div>
+            <div id="draw-result">
+                <h3>Card drawn</h3>
+                <div id="drawn-card"></div>
+            </div>
+            <div id="discard-pile">
+                <h3>Discard Pile</h3>
+                <div id="discard-card" onclick="handleDiscardClick()"></div>
+            </div>
         </div>
-        <div id="discard-pile">
-            <h3>Discard Pile</h3>
-            <div id="discard-card"></div>
-            <button onclick="takeDiscard()">Take Discard</button>
-        </div>
-        <button onclick="endTurn()">End Turn</button>
     </div>
 </body>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
