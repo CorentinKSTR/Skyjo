@@ -1,0 +1,71 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+}
+
+#login, #game {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+#game {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#player-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 50px);
+    grid-gap: 10px;
+    margin-bottom: 20px;
+}
+
+#player-cards div {
+    background-color: #e0e0e0;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+}
+
+#draw-pile, #discard-pile {
+    margin: 10px;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#discard-card {
+    background-color: #e0e0e0;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    width: 50px;
+    text-align: center;
+}
+
+#player-cards .highlight {
+    background-color: #90ee90;
+    border: 2px solid #008000;
+}

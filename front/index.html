@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skyjo Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="login">
+        <p>Room</p>
+        <textarea id="room"></textarea>
+        <input id="name" placeholder="Enter your name"></input>
+        <button onclick="connect()">Connect</button>
+    </div>
+    <div id="game" style="display:none;">
+        <h2 id="status">Game Board</h2>
+        <div id="player-cards"></div>
+        <div id="opponent-cards"></div> <!-- Conteneur pour les cartes de l'adversaire -->
+        <div id="draw-pile">
+            <h3>Draw Pile</h3>
+            <button onclick="drawCard()">Draw Card</button>
+        </div>
+        <div id="discard-pile">
+            <h3>Discard Pile</h3>
+            <div id="discard-card"></div>
+            <button onclick="takeDiscard()">Take Discard</button>
+        </div>
+        <button onclick="endTurn()">End Turn</button>
+    </div>
+</body>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
+<script src="./script.js"></script>
+</html>
