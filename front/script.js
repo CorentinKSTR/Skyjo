@@ -58,7 +58,8 @@ const updateGameBoard = (data) => {
     playerCards.innerHTML = '';
     data.players[socket.id].hand.forEach((card, index) => {
         const cardElement = document.createElement('div');
-        cardElement.innerText = card.visible ? card.value : '?';
+        cardElement.classList.add('card');
+        cardElement.innerHTML = `<img src="assets/${card.visible ? card.value : 'back'}.png" draggable="false"/>`;
         cardElement.id = `card-${index}`;  // Ajout d'un identifiant unique
         cardElement.onclick = () => cardClickHandler(index);
         playerCards.appendChild(cardElement);
@@ -68,12 +69,13 @@ const updateGameBoard = (data) => {
     opponentCards.innerHTML = '';
     data.players[opponentId].hand.forEach((card, index) => {
         const cardElement = document.createElement('div');
-        cardElement.innerText = card.visible ? card.value : '?';
+        cardElement.classList.add('card');
+        cardElement.innerHTML = `<img src="assets/${card.visible ? card.value : 'back'}.png" draggable="false"/>`;
         cardElement.id = `opponent-card-${index}`;
         opponentCards.appendChild(cardElement);
     });
 
-    discardCard.innerText = data.discardPile[data.discardPile.length - 1] || '';
+    discardCard.innerHTML = `<img src="assets/${data.discardPile[data.discardPile.length - 1]}.png" draggable="false"/>` || '';
     highlightCurrentPlayer(data.currentPlayer);
 }
 

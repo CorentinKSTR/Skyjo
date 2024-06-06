@@ -15,11 +15,14 @@
     </div>
     <div id="game" style="display:none;">
         <h2 id="status">Game Board</h2>
+        <h3>Your cards</h3>
         <div id="player-cards"></div>
+        <hr>
+        <h3>Opponent's cards</h3>
         <div id="opponent-cards"></div> <!-- Conteneur pour les cartes de l'adversaire -->
         <div id="draw-pile">
             <h3>Draw Pile</h3>
-            <button onclick="drawCard()">Draw Card</button>
+            <button onclick="drawCard()"><img src="assets/back.png" alt="Back of the card" draggable="false"></button>
         </div>
         <div id="discard-pile">
             <h3>Discard Pile</h3>
