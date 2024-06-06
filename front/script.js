@@ -24,7 +24,7 @@ socket.on('disconnect', () => {
 
 socket.on('gameStart', (data) => {
     loginArea.style.display = 'none';
-    gameArea.style.display = 'block';
+    gameArea.style.display = 'flex';
     turnPhase = 'initial';
     updateGameBoard(data);
 });
