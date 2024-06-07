@@ -12,7 +12,7 @@ const discardCard = document.querySelector('#discard-card');
 const gameArea = document.querySelector('#game');
 const loginArea = document.querySelector('#login');
 const statusElement = document.querySelector('#status');
-const socket = io('http://localhost:3000');
+const socket = io('https://skyjo-tz8i.onrender.com');
 
 socket.on('connect', () => {
     console.log('Connected');
