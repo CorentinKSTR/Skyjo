@@ -12,7 +12,9 @@ const discardCard = document.querySelector('#discard-card');
 const gameArea = document.querySelector('#game');
 const loginArea = document.querySelector('#login');
 const statusElement = document.querySelector('#status');
-const socket = io('https://skyjo-tz8i.onrender.com');
+const playerScore = document.querySelector('#player-score');
+const opponentScore = document.querySelector('#opponent-score');
+const socket = io('http://localhost:3000');
 
 socket.on('connect', () => {
     console.log('Connected');
@@ -62,39 +64,65 @@ let connect = () => {
 
 const updateGameBoard = (data) => {
     playerCards.innerHTML = '';
-    data.players[socket.id].hand.forEach((card, index) => {
-        const cardElement = document.createElement('div');
-        cardElement.classList.add('card');
-        cardElement.innerHTML = `<img src="assets/${card.visible ? card.value : 'back'}.png" draggable="false"/>`;
-        cardElement.id = `card-${index}`;  // Ajout d'un identifiant unique
-        cardElement.onclick = () => cardClickHandler(index);
-        playerCards.appendChild(cardElement);
-    });
+    createCardColumns(data.players[socket.id].hand, playerCards);
 
     const opponentId = Object.keys(data.players).find(id => id !== socket.id);
     opponentCards.innerHTML = '';
-    data.players[opponentId].hand.forEach((card, index) => {
-        const cardElement = document.createElement('div');
-        cardElement.classList.add('card');
-        cardElement.innerHTML = `<img src="assets/${card.visible ? card.value : 'back'}.png" draggable="false"/>`;
-        cardElement.id = `opponent-card-${index}`;
-        opponentCards.appendChild(cardElement);
-    });
+    createCardColumns(data.players[opponentId].hand, opponentCards);
 
     discardCard.innerHTML = `<img src="assets/${data.discardPile[data.discardPile.length - 1]}.png" draggable="false"/>` || '';
+
+    playerScore.innerText = `Your Score: ${data.players[socket.id].score}`;
+    opponentScore.innerText = `Opponent's Score: ${data.players[opponentId].score}`;
+
     highlightCurrentPlayer(data.currentPlayer);
 }
 
-const cardClickHandler = (index) => {
-    console.log(`Card at index ${index} clicked`);  // Log pour vérifier le clic
+const createCardColumns = (hand, container) => {
+    const columns = [[], [], [], []];
+
+    hand.forEach((card, index) => {
+        const colIndex = index % 4;
+        if (card) {
+            columns[colIndex].push(card);
+        }
+    });
+
+    columns.forEach((column, colIndex) => {
+        const columnElement = document.createElement('div');
+        columnElement.classList.add('colonne');
+        columnElement.setAttribute('data-col', colIndex);
+
+        column.forEach((card, rowIndex) => {
+            if (card) {
+                const cardElement = document.createElement('div');
+                cardElement.classList.add('card');
+                cardElement.innerHTML = `<img src="assets/${card.visible ? card.value : 'back'}.png" draggable="false"/>`;
+                cardElement.id = `card-${colIndex}-${rowIndex}`;
+                cardElement.onclick = () => cardClickHandler(colIndex, rowIndex, card.visible);
+                columnElement.appendChild(cardElement);
+            }
+        });
+
+        container.appendChild(columnElement);
+    });
+}
+
+const cardClickHandler = (colIndex, rowIndex, visible) => {
+    const index = colIndex + rowIndex * 4;
+    console.log(`Card at column ${colIndex}, row ${rowIndex} clicked`);  // Log pour vérifier le clic
     if (turnPhase === 'initial') {
         console.log("Entering reveal phase")
         socket.emit('revealCard', room, index);
     } else if (turnPhase === 'main') {
         if (discardPhase) {
-            console.log("Entering reveal after discard phase")
-            socket.emit('revealCardAfterDiscard', room, index);
-            discardPhase = false; // Reset discard phase after revealing
+            if (!visible) {
+                console.log("Entering reveal after discard phase")
+                socket.emit('revealCardAfterDiscard', room, index);
+                discardPhase = false; // Reset discard phase after revealing
+            } else {
+                alert("You can only reveal a card that is face down.");
+            }
         } else {
             console.log("Entering swap phase")
             if (drawnCard) {

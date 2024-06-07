@@ -87,15 +87,22 @@ io.on('connection', (socket) => {
         let game = games[room];
         if (game && game.currentPlayer === socket.id) {
             let player = game.players[socket.id];
-            let discarded = player.hand[index].value;  // Sauvegarder la valeur de la carte à défausser
+            let discarded = player.hand[index]?.value;  // Sauvegarder la valeur de la carte à défausser
             player.hand[index] = { value: drawnCard, visible: true };  // Remplacer la carte par celle piochée
 
-            game.discardPile.push(discarded);  // Ajouter la carte défaussée à la pile de défausse
+            if (discarded !== undefined) {
+                game.discardPile.push(discarded);  // Ajouter la carte défaussée à la pile de défausse
+            }
 
             if (game.deck.length === 0) {
                 game.deck = shuffle(game.discardPile);
                 game.discardPile = [];
             }
+
+            player.hand = removeIdenticalColumn(player.hand, game.discardPile);
+
+            // Recalculer le score après suppression de la colonne
+            player.score = calculateScore(player.hand);
 
             game.currentPlayer = getNextPlayer(room, socket.id);
             io.to(room).emit('gameUpdate', game);
@@ -117,6 +124,12 @@ io.on('connection', (socket) => {
         if (game && game.currentPlayer === socket.id) {
             let player = game.players[socket.id];
             player.hand[index].visible = true;
+
+            player.hand = removeIdenticalColumn(player.hand, game.discardPile);
+
+            // Recalculer le score après suppression de la colonne
+            player.score = calculateScore(player.hand);
+
             game.currentPlayer = getNextPlayer(room, socket.id);
             io.to(room).emit('gameUpdate', game);
             io.to(room).emit('updateTurn', game.currentPlayer);
@@ -129,6 +142,7 @@ const startGame = (room) => {
     let players = Object.keys(game.players);
     players.forEach(playerId => {
         game.players[playerId].hand = drawInitialCards(game.deck);
+        game.players[playerId].score = calculateScore(game.players[playerId].hand); // Initialize score
     });
     game.discardPile.push(game.deck.pop());
     io.to(room).emit('gameStart', game);
@@ -198,6 +212,39 @@ const drawCardFromDeck = (deck) => {
         return deck.pop();
     }
     return null;
+}
+
+const checkColumnForIdenticalCards = (hand) => {
+    for (let col = 0; col < 4; col++) {
+        const firstCard = hand[col]?.value;
+        if (firstCard !== undefined &&
+            hand[col]?.visible && 
+            hand[col + 4]?.visible && hand[col + 4]?.value === firstCard && 
+            hand[col + 8]?.visible && hand[col + 8]?.value === firstCard) {
+            return col;
+        }
+    }
+    return -1;
+}
+
+const removeIdenticalColumn = (hand, discardPile) => {
+    const columnToRemove = checkColumnForIdenticalCards(hand);
+    if (columnToRemove !== -1) {
+        for (let row = 0; row < 3; row++) {
+            const cardToDiscard = hand[columnToRemove + row * 4];
+            if (cardToDiscard?.value !== undefined) {
+                discardPile.push(cardToDiscard.value);
+            }
+            hand[columnToRemove + row * 4] = null; // Supprimer la carte de la main
+        }
+    }
+    return hand;
+}
+
+const calculateScore = (hand) => {
+    return hand.reduce((total, card) => {
+        return total + (card?.visible ? card.value : 0);
+    }, 0);
 }
 
 server.listen(PORT, () => {

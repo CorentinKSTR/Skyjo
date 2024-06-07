@@ -15,12 +15,9 @@
     </div>
     <div id="game" style="display:none;">
         <h2 id="status">Game Board</h2>
-        <h3>Your cards</h3>
-        <div id="player-cards"></div>
-        <hr>
-        <h3>Opponent's cards</h3>
-        <div id="opponent-cards"></div>
-        <div class="flex gap-4">
+        <h3 id="player-score">Your Score: 0</h3>
+        <div id="player-cards" class="board"></div>
+        <div class="action">
             <div id="draw-pile">
                 <h3>Draw Pile</h3>
                 <div onclick="drawCard()"><img src="assets/back.png" alt="Back of the card" draggable="false"></div>
@@ -29,11 +26,14 @@
                 <h3>Card drawn</h3>
                 <div id="drawn-card"></div>
             </div>
-            <div id="discard-pile">
+            <div id="discard-pile" onclick="handleDiscardClick()">
                 <h3>Discard Pile</h3>
-                <div id="discard-card" onclick="handleDiscardClick()"></div>
+                <div id="discard-card"></div>
             </div>
         </div>
+        <hr>
+        <h3 id="opponent-score">Opponent's Score: 0</h3>
+        <div id="opponent-cards" class="board"></div>
     </div>
 </body>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
