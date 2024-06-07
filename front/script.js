@@ -14,7 +14,7 @@ const loginArea = document.querySelector('#login');
 const statusElement = document.querySelector('#status');
 const playerScore = document.querySelector('#player-score');
 const opponentScore = document.querySelector('#opponent-score');
-const socket = io('http://localhost:3000');
+const socket = io('https://skyjo-tz8i.onrender.com/');
 
 socket.on('connect', () => {
     console.log('Connected');
