@@ -11,11 +11,18 @@ const opponentCards = document.querySelector('#opponent-cards');
 const discardCard = document.querySelector('#discard-card');
 const gameArea = document.querySelector('#game');
 const loginArea = document.querySelector('#login');
-const statusElement = document.querySelector('#status');
+const playerArea = document.querySelector('.player');
+const opponentArea = document.querySelector('.opponent');
 const playerScore = document.querySelector('#player-score');
 const opponentScore = document.querySelector('#opponent-score');
 // const socket = io('http://localhost:3000/');
 const socket = io('https://skyjo-tz8i.onrender.com/');
+
+
+document.querySelector('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    connect();
+});
 
 socket.on('connect', () => {
     console.log('Connected');
@@ -73,8 +80,8 @@ const updateGameBoard = (data) => {
 
     discardCard.innerHTML = `<img src="assets/${data.discardPile[data.discardPile.length - 1]}.png" draggable="false"/>` || '';
 
-    playerScore.innerText = `Your Score: ${data.players[socket.id].score}`;
-    opponentScore.innerText = `Opponent's Score: ${data.players[opponentId].score}`;
+    playerScore.innerText = `${data.players[socket.id].name}'s Score: ${data.players[socket.id].score}`;
+    opponentScore.innerText = `${data.players[opponentId].name}'s Score: ${data.players[opponentId].score}`;
 
     highlightCurrentPlayer(data.currentPlayer);
 }
@@ -172,11 +179,13 @@ const swapCard = (index) => {
 }
 
 const highlightCurrentPlayer = (playerId) => {
-    if (socket.id === playerId) {
-        statusElement.innerText = "Your turn!";
-        statusElement.style.color = "green";
-    } else {
-        statusElement.innerText = "Waiting for opponent...";
-        statusElement.style.color = "red";
+    if (turnPhase !== 'initial') {
+        if (socket.id === playerId) {
+            playerArea.style.background = 'rgba(0, 186, 81, 0.31)';
+            opponentArea.style.background = 'none';
+        } else {
+            playerArea.style.background = 'none';
+            opponentArea.style.background = 'rgba(255, 0, 0, 0.31)';
+        }
     }
 }
