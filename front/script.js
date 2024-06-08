@@ -15,12 +15,11 @@ const playerArea = document.querySelector('.player');
 const opponentArea = document.querySelector('.opponent');
 const playerScore = document.querySelector('#player-score');
 const opponentScore = document.querySelector('#opponent-score');
-// const socket = io('http://localhost:3000/');
-const socket = io('https://skyjo-tz8i.onrender.com/');
+const socket = io('http://localhost:3000/');
+// const socket = io('https://skyjo-tz8i.onrender.com/');
 
-
-document.querySelector('form').addEventListener('submit', (e) => {
-    e.preventDefault();
+document.querySelector('form').addEventListener('submit', (event) => {
+    event.preventDefault();
     connect();
 });
 
@@ -61,6 +60,7 @@ socket.on('updateTurn', (playerId) => {
     turnPhase = 'main';
     cardDrawnThisTurn = false; // Reset card drawn flag at the start of a new turn
     discardPhase = false; // Reset discard phase
+    document.querySelector('#drawn-card').innerHTML = '';
     highlightCurrentPlayer(playerId);
 });
 
@@ -123,6 +123,7 @@ const cardClickHandler = (colIndex, rowIndex, visible) => {
         console.log("Entering reveal phase")
         socket.emit('revealCard', room, index);
     } else if (turnPhase === 'main') {
+        if (!isPlayerTurn()) return; // Bloquer les actions si ce n'est pas le tour du joueur
         if (discardPhase) {
             if (!visible) {
                 console.log("Entering reveal after discard phase")
@@ -143,6 +144,7 @@ const cardClickHandler = (colIndex, rowIndex, visible) => {
 }
 
 const drawCard = () => {
+    if (!isPlayerTurn()) return; // Bloquer les actions si ce n'est pas le tour du joueur
     if (!cardDrawnThisTurn) {
         socket.emit('drawCard', room);
     } else {
@@ -151,6 +153,7 @@ const drawCard = () => {
 }
 
 const handleDiscardClick = () => {
+    if (!isPlayerTurn()) return; // Bloquer les actions si ce n'est pas le tour du joueur
     if (drawnCard !== null) {
         // Discard the drawn card and allow player to reveal a card
         socket.emit('discardDrawnCard', room, drawnCard);
@@ -168,6 +171,7 @@ const handleDiscardClick = () => {
 }
 
 const swapCard = (index) => {
+    if (!isPlayerTurn()) return; // Bloquer les actions si ce n'est pas le tour du joueur
     if (drawnCard !== null) {
         socket.emit('swapCard', room, index, drawnCard, chosenCardSource);
         drawnCard = null;
@@ -188,4 +192,8 @@ const highlightCurrentPlayer = (playerId) => {
             opponentArea.style.background = 'rgba(255, 0, 0, 0.31)';
         }
     }
+}
+
+const isPlayerTurn = () => {
+    return document.querySelector('.player').style.background === 'rgba(0, 186, 81, 0.31)';
 }

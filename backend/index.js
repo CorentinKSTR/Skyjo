@@ -71,7 +71,7 @@ io.on('connection', (socket) => {
         let game = games[room];
         if (game && game.currentPlayer === socket.id && !game.initialPhase) {
             let card = drawCardFromDeck(game.deck);
-            io.to(socket.id).emit('drawnCard', card);
+            io.to(room).emit('drawnCard', card);
         }
     });
 
@@ -79,7 +79,7 @@ io.on('connection', (socket) => {
         let game = games[room];
         if (game && game.currentPlayer === socket.id && !game.initialPhase) {
             let card = game.discardPile.pop();
-            io.to(socket.id).emit('discardCardChosen', card);
+            io.to(room).emit('discardCardChosen', card);
         }
     });
 
