@@ -21,8 +21,8 @@ const opponentScore = document.querySelector('#opponent-score');
 const drawnCardArea = document.querySelector('#drawn-card'); // Ajout pour afficher la carte tirée
 const rulesArea = document.querySelector('#rules'); // Ajout pour manipuler la div des règles
 
-// const socket = io('https://skyjo-tz8i.onrender.com/');
-const socket = io('http://localhost:3000/');
+const socket = io('https://skyjo-tz8i.onrender.com/');
+// const socket = io('http://localhost:3000/');
 
 document.querySelector('form').addEventListener('submit', (event) => {
     event.preventDefault();
@@ -68,6 +68,17 @@ socket.on('discardCardChosen', (card) => {
         document.querySelector('#drawn-card').innerHTML = `<img src="assets/${card}.png" draggable="false"/>`;
     }
 });
+
+socket.on('drawnCardDiscarded', ({ card, playerId }) => {
+    if (!gameEnded) {
+        drawnCard = null;
+        document.querySelector('#drawn-card').innerHTML = '';
+        if (socket.id === playerId) {
+            discardPhase = true; // Enter discard phase for the player who discarded the card
+        }
+    }
+});
+
 
 socket.on('updateTurn', (playerId) => {
     if (!gameEnded) {
@@ -191,6 +202,7 @@ const drawCard = () => {
 const handleDiscardClick = () => {
     if (!isPlayerTurn() || gameEnded) return; // Bloquer les actions si ce n'est pas le tour du joueur ou si le jeu est terminé
     if (drawnCard !== null) {
+        console.log("Discarding drawn card")
         // Discard the drawn card and allow player to reveal a card
         socket.emit('discardDrawnCard', room, drawnCard);
         discardPhase = true; // Enter discard phase
