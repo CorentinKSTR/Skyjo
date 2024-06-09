@@ -58,6 +58,7 @@ socket.on('discardCardChosen', (card) => {
 
 socket.on('updateTurn', (playerId) => {
     turnPhase = 'main';
+    drawnCard = null; // Reset drawn card at the start of a new turn
     cardDrawnThisTurn = false; // Reset card drawn flag at the start of a new turn
     discardPhase = false; // Reset discard phase
     document.querySelector('#drawn-card').innerHTML = '';
