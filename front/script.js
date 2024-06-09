@@ -5,6 +5,9 @@ let chosenCardSource = null;
 let turnPhase = 'initial'; // Indicates the current phase: 'initial' or 'main'
 let cardDrawnThisTurn = false; // To track if a card has been drawn this turn
 let discardPhase = false; // To track if we're in the discard phase
+let gameEnded = false; // To track if the game has ended
+let initialReveals = 0; // To track the number of initial reveals
+const maxInitialReveals = 2; // Maximum number of cards that can be revealed initially
 const roomArea = document.querySelector('#room');
 const playerCards = document.querySelector('#player-cards');
 const opponentCards = document.querySelector('#opponent-cards');
@@ -15,8 +18,11 @@ const playerArea = document.querySelector('.player');
 const opponentArea = document.querySelector('.opponent');
 const playerScore = document.querySelector('#player-score');
 const opponentScore = document.querySelector('#opponent-score');
-const socket = io('http://localhost:3000/');
+const drawnCardArea = document.querySelector('#drawn-card'); // Ajout pour afficher la carte tirée
+const rulesArea = document.querySelector('#rules'); // Ajout pour manipuler la div des règles
+
 // const socket = io('https://skyjo-tz8i.onrender.com/');
+const socket = io('http://localhost:3000/');
 
 document.querySelector('form').addEventListener('submit', (event) => {
     event.preventDefault();
@@ -34,7 +40,10 @@ socket.on('disconnect', () => {
 socket.on('gameStart', (data) => {
     loginArea.style.display = 'none';
     gameArea.style.display = 'flex';
+    rulesArea.style.display = 'none'; // Masquer les règles
     turnPhase = 'initial';
+    gameEnded = false; // Reset gameEnded flag
+    initialReveals = 0; // Reset initial reveal count
     updateGameBoard(data);
 });
 
@@ -42,27 +51,47 @@ socket.on('gameUpdate', (data) => {
     updateGameBoard(data);
 });
 
-socket.on('drawnCard', (card) => {
-    drawnCard = card;
-    chosenCardSource = 'draw';
-    cardDrawnThisTurn = true;
-    document.querySelector('#drawn-card').innerHTML = `<img src="assets/${card}.png" draggable="false"/>`;
+socket.on('drawnCard', ({ card }) => {
+    if (!gameEnded) {
+        drawnCard = card;
+        chosenCardSource = 'draw';
+        cardDrawnThisTurn = true;
+        drawnCardArea.innerHTML = `<img src="assets/${card}.png" draggable="false"/>`;
+    }
 });
 
 socket.on('discardCardChosen', (card) => {
-    drawnCard = card;
-    chosenCardSource = 'discard';
-    cardDrawnThisTurn = true;
-    document.querySelector('#drawn-card').innerHTML = `<img src="assets/${card}.png" draggable="false"/>`;
+    if (!gameEnded) {
+        drawnCard = card;
+        chosenCardSource = 'discard';
+        cardDrawnThisTurn = true;
+        document.querySelector('#drawn-card').innerHTML = `<img src="assets/${card}.png" draggable="false"/>`;
+    }
 });
 
 socket.on('updateTurn', (playerId) => {
-    turnPhase = 'main';
-    drawnCard = null; // Reset drawn card at the start of a new turn
-    cardDrawnThisTurn = false; // Reset card drawn flag at the start of a new turn
-    discardPhase = false; // Reset discard phase
-    document.querySelector('#drawn-card').innerHTML = '';
-    highlightCurrentPlayer(playerId);
+    if (!gameEnded) {
+        turnPhase = 'main';
+        drawnCard = null; // Reset drawn card at the start of a new turn
+        cardDrawnThisTurn = false; // Reset card drawn flag at the start of a new turn
+        discardPhase = false; // Reset discard phase
+        document.querySelector('#drawn-card').innerHTML = '';
+        highlightCurrentPlayer(playerId);
+    }
+});
+
+socket.on('finalTurn', (playerId) => {
+    if (socket.id === playerId && !gameEnded) {
+        alert("This is your final turn!");
+    }
+});
+
+socket.on('gameEnd', (data) => {
+    updateGameBoard(data);
+    gameEnded = true;
+    playerArea.style.backgroundColor = 'rgb(23,162,184)'; // Change the color of the game area to indicate game over
+    opponentArea.style.backgroundColor = 'rgb(23,162,184)'; // Change the color of the game area to indicate game over
+    alert("Game over!");
 });
 
 let connect = () => {
@@ -118,11 +147,17 @@ const createCardColumns = (hand, container) => {
 }
 
 const cardClickHandler = (colIndex, rowIndex, visible) => {
+    if (gameEnded) return; // Block actions if the game has ended
     const index = colIndex + rowIndex * 4;
     console.log(`Card at column ${colIndex}, row ${rowIndex} clicked`);  // Log pour vérifier le clic
     if (turnPhase === 'initial') {
-        console.log("Entering reveal phase")
-        socket.emit('revealCard', room, index);
+        if (initialReveals < maxInitialReveals) {
+            console.log("Entering reveal phase")
+            socket.emit('revealCard', room, index);
+            initialReveals++;
+        } else {
+            alert("You can only reveal two cards at the beginning of the game!");
+        }
     } else if (turnPhase === 'main') {
         if (!isPlayerTurn()) return; // Bloquer les actions si ce n'est pas le tour du joueur
         if (discardPhase) {
@@ -145,7 +180,7 @@ const cardClickHandler = (colIndex, rowIndex, visible) => {
 }
 
 const drawCard = () => {
-    if (!isPlayerTurn()) return; // Bloquer les actions si ce n'est pas le tour du joueur
+    if (!isPlayerTurn() || gameEnded) return; // Bloquer les actions si ce n'est pas le tour du joueur ou si le jeu est terminé
     if (!cardDrawnThisTurn) {
         socket.emit('drawCard', room);
     } else {
@@ -154,7 +189,7 @@ const drawCard = () => {
 }
 
 const handleDiscardClick = () => {
-    if (!isPlayerTurn()) return; // Bloquer les actions si ce n'est pas le tour du joueur
+    if (!isPlayerTurn() || gameEnded) return; // Bloquer les actions si ce n'est pas le tour du joueur ou si le jeu est terminé
     if (drawnCard !== null) {
         // Discard the drawn card and allow player to reveal a card
         socket.emit('discardDrawnCard', room, drawnCard);
@@ -172,7 +207,7 @@ const handleDiscardClick = () => {
 }
 
 const swapCard = (index) => {
-    if (!isPlayerTurn()) return; // Bloquer les actions si ce n'est pas le tour du joueur
+    if (!isPlayerTurn() || gameEnded) return; // Bloquer les actions si ce n'est pas le tour du joueur ou si le jeu est terminé
     if (drawnCard !== null) {
         socket.emit('swapCard', room, index, drawnCard, chosenCardSource);
         drawnCard = null;
@@ -196,5 +231,5 @@ const highlightCurrentPlayer = (playerId) => {
 }
 
 const isPlayerTurn = () => {
-    return document.querySelector('.player').style.background === 'rgba(0, 186, 81, 0.31)';
+    return playerArea.style.background === 'rgba(0, 186, 81, 0.31)';
 }

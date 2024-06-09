@@ -39,6 +39,9 @@ io.on('connection', (socket) => {
                 currentPlayer: null,
                 initialPhase: true,
                 revealedCards: {},
+                finalTurnPlayer: null, // Nouvelle propriété pour suivre le joueur en phase finale
+                gameEnded: false, // Propriété pour indiquer si le jeu est terminé
+                lastTurnPlayers: [] // Les joueurs qui doivent encore jouer un tour
             };
         }
         games[room].players[socket.id] = {
@@ -71,7 +74,7 @@ io.on('connection', (socket) => {
         let game = games[room];
         if (game && game.currentPlayer === socket.id && !game.initialPhase) {
             let card = drawCardFromDeck(game.deck);
-            io.to(room).emit('drawnCard', card);
+            io.to(room).emit('drawnCard', { card, playerId: socket.id }); // Notify all players about the drawn card
         }
     });
 
@@ -79,7 +82,7 @@ io.on('connection', (socket) => {
         let game = games[room];
         if (game && game.currentPlayer === socket.id && !game.initialPhase) {
             let card = game.discardPile.pop();
-            io.to(room).emit('discardCardChosen', card);
+            io.to(room).emit('drawnCard', { card, playerId: socket.id }); // Notify all players about the drawn card
         }
     });
 
@@ -104,9 +107,23 @@ io.on('connection', (socket) => {
             // Recalculer le score après suppression de la colonne
             player.score = calculateScore(player.hand);
 
+            // Vérifier si le joueur a retourné toutes ses cartes
+            if (player.hand.every(card => card && card.visible)) {
+                if (game.finalTurnPlayer === null) {
+                    game.finalTurnPlayer = socket.id; // Marquer le joueur comme étant en phase finale
+                    game.lastTurnPlayers = Object.keys(game.players).filter(id => id !== socket.id); // Ajouter les autres joueurs à la liste des joueurs du dernier tour
+                    io.to(room).emit('finalTurn', game.currentPlayer); // Informer le joueur qu'il est en phase finale
+                }
+            }
+
             game.currentPlayer = getNextPlayer(room, socket.id);
-            io.to(room).emit('gameUpdate', game);
-            io.to(room).emit('updateTurn', game.currentPlayer);
+
+            if (game.finalTurnPlayer !== null && !game.lastTurnPlayers.includes(game.currentPlayer)) {
+                endGame(room); // Terminer le jeu si tous les joueurs ont pris leur tour final
+            } else {
+                io.to(room).emit('gameUpdate', game);
+                io.to(room).emit('updateTurn', game.currentPlayer);
+            }
         }
     });
 
@@ -114,7 +131,7 @@ io.on('connection', (socket) => {
         let game = games[room];
         if (game && game.currentPlayer === socket.id) {
             game.discardPile.push(drawnCard);  // Défausser la carte tirée
-            io.to(room).emit('gameUpdate', game);
+            io.to(room).emit('drawnCard', { card: drawnCard, playerId: socket.id }); // Notify all players about the discarded card
             // Ne pas passer le tour ici, attendre que le joueur retourne une carte
         }
     });
@@ -130,9 +147,23 @@ io.on('connection', (socket) => {
             // Recalculer le score après suppression de la colonne
             player.score = calculateScore(player.hand);
 
+            // Vérifier si le joueur a retourné toutes ses cartes
+            if (player.hand.every(card => card && card.visible)) {
+                if (game.finalTurnPlayer === null) {
+                    game.finalTurnPlayer = socket.id; // Marquer le joueur comme étant en phase finale
+                    game.lastTurnPlayers = Object.keys(game.players).filter(id => id !== socket.id); // Ajouter les autres joueurs à la liste des joueurs du dernier tour
+                    io.to(room).emit('finalTurn', game.currentPlayer); // Informer le joueur qu'il est en phase finale
+                }
+            }
+
             game.currentPlayer = getNextPlayer(room, socket.id);
-            io.to(room).emit('gameUpdate', game);
-            io.to(room).emit('updateTurn', game.currentPlayer);
+
+            if (game.finalTurnPlayer !== null && !game.lastTurnPlayers.includes(game.currentPlayer)) {
+                endGame(room); // Terminer le jeu si tous les joueurs ont pris leur tour final
+            } else {
+                io.to(room).emit('gameUpdate', game);
+                io.to(room).emit('updateTurn', game.currentPlayer);
+            }
         }
     });
 });
@@ -243,8 +274,24 @@ const removeIdenticalColumn = (hand, discardPile) => {
 
 const calculateScore = (hand) => {
     return hand.reduce((total, card) => {
-        return total + (card?.visible ? card.value : 0);
+        return total + (card?.value ?? 0);
     }, 0);
+}
+
+const endGame = (room) => {
+    let game = games[room];
+    game.gameEnded = true;
+    Object.keys(game.players).forEach(playerId => {
+        let player = game.players[playerId];
+        player.hand.forEach(card => {
+            if (card && !card.visible) {
+                card.visible = true; // Retourner toutes les cartes non visibles
+            }
+        });
+        player.hand = removeIdenticalColumn(player.hand, game.discardPile); // Supprimer les colonnes identiques après avoir tout révélé
+        player.score = calculateScore(player.hand); // Mettre à jour le score
+    });
+    io.to(room).emit('gameEnd', game); // Envoyer la mise à jour de fin de jeu
 }
 
 server.listen(PORT, () => {

@@ -14,8 +14,32 @@
         <input id="name" placeholder="Enter your name" required></input>
         <button>Connect</button>
     </form>
+    <div id="rules" style="margin-top: 20px;">
+        <h2>Rules of SKYJO</h2>
+        <p><strong>Objective:</strong> The game is played over several rounds. The game ends when a player reaches 100 points or more. The player with the fewest points wins.</p>
+        <p><strong>Setup:</strong> Each player receives 12 face-down cards. One card is placed face-up in the center to start the discard pile. The remaining cards form the draw pile.</p>
+        <p><strong>Game Play:</strong></p>
+        <ul>
+            <li>Each player arranges their 12 cards into four columns of three cards, face down.</li>
+            <li>Each player turns over two of their cards face-up.</li>
+            <li>The player with the highest sum of their two face-up cards starts the game.</li>
+        </ul>
+        <p><strong>On Your Turn:</strong></p>
+        <ul>
+            <li>Choose to take the top card from the discard pile or draw a card from the draw pile.</li>
+            <li>If you take a card from the discard pile, replace one of your cards (face-up or face-down) with it.</li>
+            <li>If you draw a card from the draw pile, you can either replace one of your cards with it or discard it and flip one of your face-down cards face-up.</li>
+        </ul>
+        <p><strong>Special Rule:</strong> If you get three identical cards in a column, remove those three cards and place them on the discard pile.</p>
+        <p><strong>End of a Round:</strong></p>
+        <ul>
+            <li>When a player reveals all their cards, the round ends after all other players have taken one more turn.</li>
+            <li>All players reveal their remaining face-down cards and calculate their scores.</li>
+            <li>If the player who ended the round does not have the lowest score, their score for that round is doubled.</li>
+        </ul>
+        <p><strong>End of the Game:</strong> The game ends when a player reaches 100 points or more. The player with the lowest total score wins.</p>
+    </div>
     <div id="game" style="display:none;">
-        <!-- <h2 id="status">Game Board</h2> -->
         <div class="player">
             <h3 id="player-score">Your Score: 0</h3>
             <div id="player-cards" class="board"></div>
